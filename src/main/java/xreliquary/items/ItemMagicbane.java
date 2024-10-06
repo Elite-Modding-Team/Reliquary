@@ -1,11 +1,16 @@
 package xreliquary.items;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.MobEffects;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
@@ -59,6 +64,15 @@ public class ItemMagicbane extends ItemSword {
 		LanguageHelper.formatTooltip(this.getUnlocalizedNameInefficiently(magicBane) + ".tooltip", tooltip);
 	}
 
+	private float getBonusDamage(ItemStack stack) {
+		float bonusDamage = 0;
+		NBTTagList enchants = stack.getEnchantmentTagList();
+		for (int enchant = 0; enchant < enchants.tagCount(); enchant++) {
+			bonusDamage += enchants.getCompoundTagAt(enchant).getShort("lvl");
+		}
+		return bonusDamage;
+	}
+
 	/**
 	 * Returns the strength of the stack against a given block. 1.0F base,
 	 * (Quality+1)*2 if correct blocktype, 1.5F if sword
@@ -106,16 +120,21 @@ public class ItemMagicbane extends ItemSword {
 				default:
 					break;
 			}
-			if(attacker instanceof EntityPlayer) {
-				NBTTagList enchants = stack.getEnchantmentTagList();
-				int bonus = 0;
-				for(int enchant = 0; enchant < enchants.tagCount(); enchant++) {
-					bonus += enchants.getCompoundTagAt(enchant).getShort("lvl");
-				}
-				target.attackEntityFrom(DamageSource.causePlayerDamage((EntityPlayer) attacker), bonus + 4);
+
+			if (attacker instanceof EntityPlayer) {
+				target.attackEntityFrom(DamageSource.causePlayerDamage((EntityPlayer) attacker), this.getAttackDamage() + this.getBonusDamage(stack));
 			}
 			stack.damageItem(1, attacker);
 		}
 		return true;
+	}
+
+	@Override
+	public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot equipmentSlot, ItemStack stack) {
+		Multimap<String, AttributeModifier> multimap = HashMultimap.create();
+
+		if (equipmentSlot == EntityEquipmentSlot.MAINHAND) {
+			multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Damage modifier", this.getAttackDamage() + this.getBonusDamage(stack), 0));
+		}
 	}
 }
