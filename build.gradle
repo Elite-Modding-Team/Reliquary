@@ -1,9 +1,8 @@
 buildscript {
     repositories {
-        jcenter()
         maven {
             name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net"
         }
         maven {
             name = "sonatype"
@@ -11,46 +10,33 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1+"
+        classpath "com.anatawa12.forge:ForgeGradle:2.3-1.0.8"
     }
 }
 
-plugins {
-    id "com.jfrog.bintray" version "1.8.4"
-}
-
-// We apply the 'forge' plugin, so ForgeGradle can do it's stuff.
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 repositories {
-    maven { url "http://dvs1.progwml6.com/files/maven" }
-    maven { url "http://tehnut.info/maven" }
-    maven { url "https://dl.bintray.com/way2muchnoise/dev" }
-    maven { url "http://maven.thiakil.com" }
-    ivy {
-        name "Botania"
-        ivyPattern 'http://www.google.com/FAKE_URL/ugly_workaround_because_curseforge_403.txt'
-        artifactPattern "http://media.forgecdn.net/files/${botania_cf}/[module] r[revision].[ext]"
-    }
+    mavenCentral()
+    maven { url "https://dvs1.progwml6.com/files/maven" }
+    maven { url "https://modmaven.dev" }
+    maven { url "https://maven.thiakil.com" }
+    maven { url "https://maven.blamejared.com" }
+    maven { url "https://cursemaven.com" }
 }
 
 group = 'xreliquary'
-version = "${minecraft_version}-${mod_version}.${getBuildNumber()}${getStable()}"
+version = "${minecraft_version}-${mod_version}"
 archivesBaseName = 'Reliquary'
 
 dependencies {
     deobfCompile "mezz.jei:jei_${minecraft_version}:${jei_version}"
-    //deobfCompile "slimeknights.mantle:Mantle:${mantle_version}"
-    //deobfCompile "slimeknights:TConstruct:${tconstruct_version}"
-    //deobfCompile "info.amerifrance.guideapi:Guide-API:${guideapi_version}"
-    deobfCompile "mcp.mobius.waila:Hwyla:${hwyla_version}"
-    deobfCompile "jeresources:JustEnoughResources-${minecraft_version}:${jer_version}"
+    deobfCompile "curse.maven:hwyla-253449:${hwyla_version}"
+    deobfCompile "curse.maven:jer-240630:${jer_version}"
     deobfCompile "com.azanor.baubles:Baubles:${baubles_version}"
-    deobfCompile name: 'Botania', version: botania_version, ext: 'jar'
+    deobfCompile "curse.maven:botania-225643:${botania_version}"
     deobfCompile "slimeknights.mantle:Mantle:${mantle_version}"
     deobfCompile "slimeknights:TConstruct:${tconstruct_version}"
-    //compile name:'Thaumcraft', version: thaumcraft_version, ext: 'jar'
 
     testCompile 'org.testng:testng:6.9.10'
     testCompile "org.mockito:mockito-core:1.+"
@@ -87,45 +73,3 @@ processResources {
         exclude 'mcmod.info'
     }
 }
-
-def getBuildNumber() {
-    if (System.getenv("DRONE_BUILD_NUMBER") != null) {
-        return "${System.getenv("DRONE_BUILD_NUMBER")}"
-    }
-
-    if (System.getenv("TRAVIS_BUILD_NUMBER") != null) {
-        return (Integer.parseInt(System.getenv("TRAVIS_BUILD_NUMBER")) + 500).toString() //hack to continue with build numbers on Travis
-    }
-    return ""
-}
-
-def getStable() {
-    if ((System.getenv("DRONE_BRANCH") == null || System.getenv("DRONE_BRANCH").endsWith("-dev"))
-            && (System.getenv("TRAVIS_BRANCH") == null || System.getenv("TRAVIS_BRANCH").endsWith("-dev"))) {
-        return "unstable"
-    }
-    return ""
-}
-
-bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
-    publish = true
-    filesSpec {
-        from 'build/libs'
-        into '.'
-        exclude '*sources.jar'
-    }
-    pkg {
-        version {
-            name = "${project.version}"
-            released = new Date()
-        }
-        repo = 'maven'
-        name = 'Reliquary'
-        licenses = ['GPL-3.0']
-        vcsUrl = 'https://github.com/P3pp3rF1y/Reliquary.git'
-    }
-
-}
-
