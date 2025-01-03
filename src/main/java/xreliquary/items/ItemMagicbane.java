@@ -136,5 +136,7 @@ public class ItemMagicbane extends ItemSword {
 		if (equipmentSlot == EntityEquipmentSlot.MAINHAND) {
 			multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Damage modifier", this.getAttackDamage() + this.getBonusDamage(stack), 0));
 		}
+
+        return multimap;
 	}
 }
