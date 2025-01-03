@@ -93,6 +93,12 @@ public class Settings {
 		@Config.Name("redstone_and_glowstone")
 		@Config.Comment("Whether potions with the same effect combination, but different duration appear in creative tabs / JEI")
 		public boolean redstoneAndGlowstone = false;
+        @Config.Name("max_duration")
+        @Config.Comment("Maximum effect duration a potion can have")
+        public int maxDuration = 18000;
+        @Config.Name("max_amplifier")
+        @Config.Comment("Maximum effect amplifier a potion can have")
+        public int maxAmplifier = 2;
 	}
 
 	@Config.Name("hud_positions")

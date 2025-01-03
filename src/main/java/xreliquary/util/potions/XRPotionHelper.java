@@ -20,6 +20,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import xreliquary.items.ItemPotionEssence;
+import xreliquary.reference.Settings;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -27,8 +28,6 @@ import java.util.*;
 public class XRPotionHelper {
 
 	private static final String EFFECTS_NBT_TAG = "effects";
-	private static int MAX_DURATION = 36000;
-	private static int MAX_AMPLIFIER = 4;
 
 	public static boolean isItemEssence(ItemStack ist) {
 		// essence not quite a thing just yet.
@@ -234,7 +233,7 @@ public class XRPotionHelper {
 
 		for(PotionEffect effect : effects) {
 			int newDuration = new Double((double) effect.getDuration() * multiplier).intValue();
-			newDuration = Math.min(newDuration, MAX_DURATION * 2);
+			newDuration = Math.min(newDuration, Settings.Potions.maxDuration * 2);
 
 			PotionEffect newEffect = new PotionEffect(effect.getPotion(), newDuration, effect.getAmplifier(), effect.getIsAmbient(), effect.doesShowParticles());
 			newEffects.add(newEffect);
@@ -260,7 +259,7 @@ public class XRPotionHelper {
 			int newAmplifier = effect.getAmplifier();
 
 			if(XRPotionHelper.isAugmentablePotionEffect(effect))
-				newAmplifier = Math.min(effect.getAmplifier() + glowstoneCount, MAX_AMPLIFIER + 1);
+				newAmplifier = Math.min(effect.getAmplifier() + glowstoneCount, Settings.Potions.maxAmplifier + 1);
 
 			PotionEffect newEffect = new PotionEffect(effect.getPotion(), new Double(effect.getDuration() * multiplier).intValue(), newAmplifier, effect.getIsAmbient(), effect.doesShowParticles());
 			newEffects.add(newEffect);
@@ -324,7 +323,7 @@ public class XRPotionHelper {
 			amplifier += effect.getAmplifier();
 		}
 
-		return Math.min(amplifier, XRPotionHelper.MAX_AMPLIFIER);
+		return Math.min(amplifier, Settings.Potions.maxAmplifier);
 	}
 
 	private static int getCombinedDuration(List<PotionEffect> effects) {
@@ -343,7 +342,7 @@ public class XRPotionHelper {
 		if(count == 3)
 			duration = (int) (duration / 1.1);
 
-		return Math.min(duration, XRPotionHelper.MAX_DURATION);
+		return Math.min(duration, Settings.Potions.maxDuration);
 	}
 
 	public static void applyEffectsToEntity(Collection<PotionEffect> effects, Entity source, Entity indirectSource, EntityLivingBase entitylivingbase) {
