@@ -1,18 +1,22 @@
 package xreliquary.handler;
 
 import com.google.common.collect.Sets;
+
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Enchantments;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketPlayerAbilities;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -33,132 +37,151 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = Reference.MOD_ID)
 public class CommonEventHandler {
 
-	private static final Set<IPlayerHurtHandler> playerHurtHandlers = Sets.newTreeSet(new HandlerPriorityComparator());
-	private static final Set<IPlayerDeathHandler> playerDeathHandlers = Sets.newTreeSet(new HandlerPriorityComparator());
+    private static final Set<IPlayerHurtHandler> playerHurtHandlers = Sets.newTreeSet(new HandlerPriorityComparator());
+    private static final Set<IPlayerDeathHandler> playerDeathHandlers = Sets.newTreeSet(new HandlerPriorityComparator());
 
-	private static Map<UUID, Boolean> playersFlightStatus = new HashMap<>();
+    private static Map<UUID, Boolean> playersFlightStatus = new HashMap<>();
 
-	public static void registerPlayerHurtHandler(IPlayerHurtHandler handler) {
-		playerHurtHandlers.add(handler);
-	}
-	public static void registerPlayerDeathHandler(IPlayerDeathHandler handler) {
-		playerDeathHandlers.add(handler);
-	}
+    public static void registerPlayerHurtHandler(IPlayerHurtHandler handler) {
+        playerHurtHandlers.add(handler);
+    }
 
-	@SubscribeEvent
-	public static void handleMercyCrossDamage(AttackEntityEvent event) {
-		if(event.getEntityPlayer().world.isRemote || !(event.getTarget() instanceof EntityLivingBase))
-			return;
+    public static void registerPlayerDeathHandler(IPlayerDeathHandler handler) {
+        playerDeathHandlers.add(handler);
+    }
 
-		if(event.getEntityPlayer().getHeldItemMainhand().getItem() != ModItems.mercyCross)
-			return;
+    @SubscribeEvent
+    public static void handleMercyCrossDamage(AttackEntityEvent event) {
+        if (event.getEntityPlayer().world.isRemote || !(event.getTarget() instanceof EntityLivingBase))
+            return;
 
-		EntityLivingBase target = (EntityLivingBase) event.getTarget();
+        if (event.getEntityPlayer().getHeldItemMainhand().getItem() != ModItems.mercyCross)
+            return;
 
-		ModItems.mercyCross.updateAttackDamageModifier(target, event.getEntityPlayer());
-	}
+        EntityLivingBase target = (EntityLivingBase) event.getTarget();
 
-	@SubscribeEvent
-	public static void preventMendingAndUnbreaking(AnvilUpdateEvent event) {
-		if(event.getLeft().isEmpty() || event.getRight().isEmpty())
-			return;
+        ModItems.mercyCross.updateAttackDamageModifier(target, event.getEntityPlayer());
+    }
 
-		if (event.getLeft().getItem() != ModItems.mobCharm && event.getLeft().getItem() != ModItems.alkahestryTome)
-			return;
+    @SubscribeEvent
+    public static void preventMendingAndUnbreaking(AnvilUpdateEvent event) {
+        if (event.getLeft().isEmpty() || event.getRight().isEmpty())
+            return;
 
-		if (EnchantmentHelper.getEnchantments(event.getRight()).keySet().stream().anyMatch(e -> e == Enchantments.UNBREAKING)) {
-			event.setCanceled(true);
-		}
-	}
+        if (event.getLeft().getItem() != ModItems.mobCharm && event.getLeft().getItem() != ModItems.alkahestryTome)
+            return;
 
-	@SubscribeEvent
-	public static void blameDrullkus(PlayerEvent.PlayerLoggedInEvent event) {
-		// Thanks for the Witch's Hat texture! Also, blame Drullkus for making me add this. :P
-		if(event.player.getGameProfile().getName().equals("Drullkus")) {
-			if(!event.player.getEntityData().hasKey("gift")) {
-				if(event.player.inventory.addItemStackToInventory(new ItemStack(ModItems.witchHat))) {
-					event.player.getEntityData().setBoolean("gift", true);
-				}
-			}
-		}
-	}
+        if (EnchantmentHelper.getEnchantments(event.getRight()).keySet().stream().anyMatch(e -> e == Enchantments.UNBREAKING)) {
+            event.setCanceled(true);
+        }
+    }
 
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public static void beforePlayerHurt(LivingAttackEvent event) {
-		Entity entity = event.getEntity();
-		if(entity == null || !(entity instanceof EntityPlayer))
-			return;
-		EntityPlayer player = (EntityPlayer) entity;
+    @SubscribeEvent
+    public static void blameDrullkus(PlayerEvent.PlayerLoggedInEvent event) {
+        // Thanks for the Witch's Hat texture! Also, blame Drullkus for making me add this. :P
+        if (event.player.getGameProfile().getName().equals("Drullkus")) {
+            if (!event.player.getEntityData().hasKey("gift")) {
+                if (event.player.inventory.addItemStackToInventory(new ItemStack(ModItems.witchHat))) {
+                    event.player.getEntityData().setBoolean("gift", true);
+                }
+            }
+        }
+    }
 
-		boolean cancel = false;
-		for (IPlayerHurtHandler handler : playerHurtHandlers) {
-			if (handler.canApply(player, event)) {
-				if (handler.apply(player, event)) {
-					cancel = true;
-					break;
-				}
-			}
-		}
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void magicbaneDamage(LivingHurtEvent event) {
+        EntityLivingBase entity = event.getEntityLiving();
+        DamageSource damageSource = event.getSource();
+        Entity trueSource = damageSource.getTrueSource();
 
-		if(cancel) {
-			event.setCanceled(true);
-			event.setResult(null);
-		}
-	}
+        if (trueSource instanceof EntityPlayer) {
+            Item heldItem = ((EntityPlayer) trueSource).getHeldItemMainhand().getItem();
 
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public static void beforePlayerDeath(LivingDeathEvent event) {
-		Entity entity = event.getEntity();
-		if(entity == null || !(entity instanceof EntityPlayer))
-			return;
-		EntityPlayer player = (EntityPlayer) entity;
+            if (heldItem == ModItems.magicbane) {
+                if (entity instanceof EntityPlayer || !(entity.isNonBoss())) {
+                    // Only 25% of damage is dealt for players and bosses.
+                    event.setAmount(event.getAmount() * 0.25F);
+                }
+            }
+        }
+    }
 
-		boolean cancel = false;
-		for (IPlayerDeathHandler handler : playerDeathHandlers) {
-			if (handler.canApply(player, event) && handler.apply(player, event)) {
-				cancel = true;
-				break;
-			}
-		}
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void beforePlayerHurt(LivingAttackEvent event) {
+        Entity entity = event.getEntity();
+        if (entity == null || !(entity instanceof EntityPlayer))
+            return;
+        EntityPlayer player = (EntityPlayer) entity;
 
-		if(cancel) {
-			event.setCanceled(true);
-			event.setResult(null);
-		}
-	}
+        boolean cancel = false;
+        for (IPlayerHurtHandler handler : playerHurtHandlers) {
+            if (handler.canApply(player, event)) {
+                if (handler.apply(player, event)) {
+                    cancel = true;
+                    break;
+                }
+            }
+        }
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
-	public static void onDimensionUnload(WorldEvent.Unload event) {
-		if(event.getWorld() instanceof WorldServer)
-			XRFakePlayerFactory.unloadWorld((WorldServer) event.getWorld());
-	}
+        if (cancel) {
+            event.setCanceled(true);
+            event.setResult(null);
+        }
+    }
 
-	@SubscribeEvent
-	public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-		if(event.side == Side.CLIENT)
-			return;
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void beforePlayerDeath(LivingDeathEvent event) {
+        Entity entity = event.getEntity();
+        if (entity == null || !(entity instanceof EntityPlayer))
+            return;
+        EntityPlayer player = (EntityPlayer) entity;
 
-		EntityPlayer player = event.player;
+        boolean cancel = false;
+        for (IPlayerDeathHandler handler : playerDeathHandlers) {
+            if (handler.canApply(player, event) && handler.apply(player, event)) {
+                cancel = true;
+                break;
+            }
+        }
 
-		if(player.isHandActive() && player.getActiveItemStack().getItem() == ModItems.rendingGale && ModItems.rendingGale.isFlightMode(player.getActiveItemStack()) && ModItems.rendingGale.hasFlightCharge(player, player.getActiveItemStack())) {
-			playersFlightStatus.put(player.getGameProfile().getId(), true);
-			player.capabilities.allowFlying = true;
-			((EntityPlayerMP) player).connection.sendPacket(new SPacketPlayerAbilities(player.capabilities));
-		} else {
-			if(!playersFlightStatus.containsKey(player.getGameProfile().getId())) {
-				playersFlightStatus.put(player.getGameProfile().getId(), false);
-			}
+        if (cancel) {
+            event.setCanceled(true);
+            event.setResult(null);
+        }
+    }
 
-			if(playersFlightStatus.get(player.getGameProfile().getId())) {
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void onDimensionUnload(WorldEvent.Unload event) {
+        if (event.getWorld() instanceof WorldServer)
+            XRFakePlayerFactory.unloadWorld((WorldServer) event.getWorld());
+    }
 
-				playersFlightStatus.put(player.getGameProfile().getId(), false);
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.side == Side.CLIENT)
+            return;
 
-				if(!player.capabilities.isCreativeMode) {
-					player.capabilities.allowFlying = false;
-					player.capabilities.isFlying = false;
-					((EntityPlayerMP) player).connection.sendPacket(new SPacketPlayerAbilities(player.capabilities));
-				}
-			}
-		}
-	}
+        EntityPlayer player = event.player;
+
+        if (player.isHandActive() && player.getActiveItemStack().getItem() == ModItems.rendingGale && ModItems.rendingGale.isFlightMode(player.getActiveItemStack()) && ModItems.rendingGale.hasFlightCharge(player, player.getActiveItemStack())) {
+            playersFlightStatus.put(player.getGameProfile().getId(), true);
+            player.capabilities.allowFlying = true;
+            ((EntityPlayerMP) player).connection.sendPacket(new SPacketPlayerAbilities(player.capabilities));
+        } else {
+            if (!playersFlightStatus.containsKey(player.getGameProfile().getId())) {
+                playersFlightStatus.put(player.getGameProfile().getId(), false);
+            }
+
+            if (playersFlightStatus.get(player.getGameProfile().getId())) {
+
+                playersFlightStatus.put(player.getGameProfile().getId(), false);
+
+                if (!player.capabilities.isCreativeMode) {
+                    player.capabilities.allowFlying = false;
+                    player.capabilities.isFlying = false;
+                    ((EntityPlayerMP) player).connection.sendPacket(new SPacketPlayerAbilities(player.capabilities));
+                }
+            }
+        }
+    }
 }
