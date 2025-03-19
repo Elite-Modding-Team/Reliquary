@@ -1,21 +1,27 @@
 {
-    "type": "minecraft:crafting_shaped",
-    "pattern": [
-        "NG",
-        "IN"
-    ],
-    "key": {
-        "G": {
-            "item": "minecraft:gold_ingot"
-        },
-        "I": {
-            "item": "minecraft:iron_ingot"
-        },
-        "N": {
-            "item": "#NEBULOUS_HEART"
-        }
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " NT",
+    "NIN",
+    "SN "
+  ],
+  "key": {
+    "T": {
+      "item": "xreliquary:midas_touchstone"
     },
-    "result": {
-        "item": "xreliquary:magicbane"
+    "I": {
+      "type": "forge:ore_dict",
+      "ore": "ingotIron"
+    },
+    "S": {
+      "type": "forge:ore_dict",
+      "ore": "stickWood"
+    },
+    "N": {
+      "item": "#NEBULOUS_HEART"
     }
+  },
+  "result": {
+    "item": "xreliquary:magicbane"
+  }
 }
