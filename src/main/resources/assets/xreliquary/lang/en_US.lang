@@ -155,7 +155,7 @@ xreliquary.tile.fertile_lilypad.name=Lilypad of Fertility
 xreliquary.tile.fertile_lilypad.tooltip=Speeds up growth of crops
 
 xreliquary.item.magicbane.name=Magicbane
-xreliquary.item.magicbane.tooltip=Increases its strength;with each enchantment.
+xreliquary.item.magicbane.tooltip=Increases its strength with each enchantment.;Can be repaired with the Touchstone of Midas.
 
 xreliquary.item.magazine_0.name=Empty Magazine
 xreliquary.item.magazine_1.name=Neutral Magazine
