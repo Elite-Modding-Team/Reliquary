@@ -19,33 +19,36 @@ import xreliquary.util.LanguageHelper;
 import javax.annotation.Nonnull;
 
 public class ItemWitchHat extends ItemArmor {
+    private static final ItemArmor.ArmorMaterial hatMaterial = EnumHelper.addArmorMaterial("hat_material", Reference.DOMAIN + Names.Items.WITCH_HAT, 5, new int[]{0, 0, 0, 1}, 15, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F);
+    private ModelBiped modelWitchHat;
 
-	private static final ItemArmor.ArmorMaterial hatMaterial = EnumHelper.addArmorMaterial("hat_material", Reference.DOMAIN + Names.Items.WITCH_HAT, 0, new int[] {0, 0, 0, 0}, 0, SoundEvents.ITEM_ARMOR_EQUIP_GENERIC, 0.0F);
+    public ItemWitchHat() {
+        super(hatMaterial, 0, EntityEquipmentSlot.HEAD);
+        this.setUnlocalizedName(Names.Items.WITCH_HAT);
 
-	public ItemWitchHat() {
-		super(hatMaterial, 0, EntityEquipmentSlot.HEAD);
-		this.setUnlocalizedName(Names.Items.WITCH_HAT);
+        this.setCreativeTab(Reliquary.CREATIVE_TAB);
+    }
 
-		this.setCreativeTab(Reliquary.CREATIVE_TAB);
-	}
+    @Nonnull
+    @Override
+    @SideOnly(Side.CLIENT)
+    public String getItemStackDisplayName(@Nonnull ItemStack stack) {
+        return LanguageHelper.getLocalization(this.getUnlocalizedNameInefficiently(stack) + ".name");
+    }
 
-	@Nonnull
-	@Override
-	@SideOnly(Side.CLIENT)
-	public String getItemStackDisplayName(@Nonnull ItemStack stack) {
-		return LanguageHelper.getLocalization(this.getUnlocalizedNameInefficiently(stack) + ".name");
-	}
+    @Override
+    public boolean isValidArmor(ItemStack stack, EntityEquipmentSlot armorType, Entity entity) {
+        return armorType == EntityEquipmentSlot.HEAD;
+    }
 
-	@Override
-	public boolean isValidArmor(ItemStack stack, EntityEquipmentSlot armorType, Entity entity) {
-		return armorType == EntityEquipmentSlot.HEAD;
-	}
+    @Nonnull
+    @Override
+    @SideOnly(Side.CLIENT)
+    public ModelBiped getArmorModel(EntityLivingBase player, ItemStack stack, EntityEquipmentSlot armorSlot, ModelBiped modelBiped) {
+        if (this.modelWitchHat == null) {
+            this.modelWitchHat = new ModelWitchHat();
+        }
 
-	@Nonnull
-	@Override
-	@SideOnly(Side.CLIENT)
-	public ModelBiped getArmorModel(EntityLivingBase entityLiving, ItemStack stack, EntityEquipmentSlot slotID, ModelBiped _default) {
-		return ModelWitchHat.self;
-	}
-
+        return this.modelWitchHat;
+    }
 }
