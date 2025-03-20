@@ -6,6 +6,7 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityArmorStand;
 
 public class ModelWitchHat extends ModelBiped {
     private static ModelRenderer witchHat;
@@ -51,7 +52,7 @@ public class ModelWitchHat extends ModelBiped {
         copyModelAngles(this.bipedHead, witchHat);
         GlStateManager.pushMatrix();
 
-        if (this.isSneak) {
+        if (this.isSneak || entity instanceof EntityArmorStand) {
             GlStateManager.translate(0.0F, 0.2F, 0.0F);
         }
 
