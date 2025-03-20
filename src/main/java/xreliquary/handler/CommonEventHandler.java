@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Enchantments;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketPlayerAbilities;
@@ -94,13 +95,31 @@ public class CommonEventHandler {
         DamageSource damageSource = event.getSource();
         Entity trueSource = damageSource.getTrueSource();
 
-        if (trueSource instanceof EntityPlayer) {
+        if (trueSource instanceof EntityPlayer && trueSource != null) {
             Item heldItem = ((EntityPlayer) trueSource).getHeldItemMainhand().getItem();
 
             if (heldItem == ModItems.magicbane) {
                 if (entity instanceof EntityPlayer || !(entity.isNonBoss())) {
                     // Only 25% of damage is dealt for players and bosses.
                     event.setAmount(event.getAmount() * 0.25F);
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void witchHatDamage(LivingHurtEvent event) {
+        EntityLivingBase entity = event.getEntityLiving();
+        DamageSource damageSource = event.getSource();
+        Entity trueSource = damageSource.getTrueSource();
+
+        if (trueSource != null) {
+            ItemStack equippedHelmet = entity.getItemStackFromSlot(EntityEquipmentSlot.HEAD);
+
+            if (equippedHelmet.getItem() == ModItems.witchHat) {
+                if (damageSource.isMagicDamage()) {
+                    // 25% resistance against magic damage.
+                    event.setAmount(event.getAmount() * 0.75F);
                 }
             }
         }
