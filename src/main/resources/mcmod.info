@@ -10,8 +10,10 @@
   "authorList": [
     "x3n0ph0b3",
     "TheMike",
-    "P3pp3rF1y"],
-  "credits": "Originally made by x3n0ph0b3 and TheMike, now maintained by P3pp3rF1y.",
+    "P3pp3rF1y",
+    "IcarussOne",
+    "ACGaming"],
+  "credits": "Originally made by x3n0ph0b3 and TheMike, 1.12.2 version originally made by P3pp3rF1y.",
   "logoFile": "/mods/xreliquary/textures/logo/xrlogo.png",
   "screenshots": [
   ],
